@@ -17,6 +17,12 @@ import { UserService } from '../user/user.service';
     }), 
   ],
   controllers: [AuthController],
-  providers: [AuthService, UserService, PrismaService, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    UserService,
+    PrismaService,
+    JwtStrategy,
+    GoogleStrategy,
+  ],
 })
 export class AuthModule {}
