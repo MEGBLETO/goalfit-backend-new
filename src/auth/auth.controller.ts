@@ -17,7 +17,6 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guards';
 import { AuthGuard } from '@nestjs/passport';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
