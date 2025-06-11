@@ -19,7 +19,3 @@ GoalFit is a personalized fitness and nutrition application designed to generate
 - Authentication: Passport.js with JWT strategy
 - AI Integration: OpenAI API
 - DevOps: Docker, GitHub Actions, PM2
-- Cloud: AWS (future moderation, media, and storage)
-
-## Project Structure
-
