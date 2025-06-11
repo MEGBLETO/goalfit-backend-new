@@ -3,19 +3,25 @@ import { OpenAI } from 'openai';
 
 @Injectable()
 export class OpenaiService {
-  private openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  private readonly openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
-  async askOpenAI(question: string): Promise<string> {
+  async chatWithJsonPrompt(prompt: string): Promise<string> {
     try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-4o',
-        messages: [{ role: 'user', content: question }],
+        temperature: 0.7,
+        messages: [{ role: 'user', content: prompt }],
       });
 
-      return response.choices[0].message.content;
+      const message = response.choices[0].message.content;
+      if (!message) throw new Error('No content returned from OpenAI');
+
+      return message.trim();
     } catch (error) {
-      console.error('Error communicating with OpenAI:', error);
-      throw new Error('Failed to get response from OpenAI');
+      console.error('Error from OpenAI:', error);
+      throw new Error('OpenAI request failed');
     }
   }
 }

@@ -15,7 +15,6 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // Get user by ID
   @Get(':id')
   async getUserById(@Param('id') id: string) {
     const user = await this.userService.findById(id);
@@ -23,7 +22,6 @@ export class UserController {
     return user;
   }
 
-  // Get user by sub (from JWT subject)
   @Get('/sub/:sub')
   async getUserBySub(@Param('sub') sub: string) {
     const user = await this.userService.findBySub(sub);
@@ -31,7 +29,6 @@ export class UserController {
     return user;
   }
 
-  // Update user profile
   @Put(':id')
   async updateUser(
     @Param('id') id: string,
@@ -40,13 +37,11 @@ export class UserController {
     return this.userService.update(id, updateUserDto);
   }
 
-  // Delete user
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.userService.delete(id);
   }
 
-  // List all users (admin or debug only)
   @Get()
   async getAllUsers(
     @Query('limit') limit?: number,

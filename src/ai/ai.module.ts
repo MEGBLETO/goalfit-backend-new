@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { AiController } from './ai.controller';
-import { AiService } from './ai.service';
 import { OpenaiService } from './openai/openai.service';
-import { AiService } from './ai.service';
+import { WorkoutService } from './workout/workout.service';
+import { MealService } from './meal/meal.service';
 
 @Module({
   controllers: [AiController],
-  providers: [AiService, OpenaiService]
+  providers: [OpenaiService, WorkoutService, MealService],
 })
 export class AiModule {}
