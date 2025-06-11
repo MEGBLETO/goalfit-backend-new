@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String?
+  googleId        String?  @unique
+  contact         String?  @unique
+  surname         String?
+  name            String?
+  isEmailVerified Boolean  @default(false)
+  firstLogin      Boolean  @default(true)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  profile            UserProfile?
+  subscription       Subscription?
+  payments           Payment[]
+  mealPlans          MealPlan[]
+  workoutPlans       WorkoutPlan[]
+  weightEntries      UserWeightEntry[]
+  provisionalWeights ProvisionalWeightEntry[]
+  calorieLogs        CalorieLog[]
+}
+
+model UserProfile {
+  id                   String             @id @default(uuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age                  Int?
+  gender               String?
+  height               Float?
+  weight               Float?
+  fitnessLevel         String?
+  goals                Goal[]
+  dietaryPreferences   DietaryPreference?
+  equipment            String[]
+  availability         Availability?
+  healthConsiderations String[]
+  updatedAt            DateTime           @updatedAt
+}
+
+model Subscription {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider      String
+  providerSubId String    @unique
+  status        String
+  startDate     DateTime?
+  endDate       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  payments      Payment[]
+}
+
+model Payment {
+  id               String       @id @default(uuid())
+  subscriptionId   String
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  amount           Float
+  providerIntentId String       @unique
+  method           String
+  status           String
+  invoiceUrl       String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @default(now())
+}
+
+
+model MealPlan {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date       DateTime
+  content    Json
+  isDefault  Boolean  @default(false)
+  calories   Float?   
+  protein    Float?   
+  carbs      Float?   
+  fat        Float?   
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model WorkoutPlan {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workouts Workout[]
+
+  @@unique([userId, date])
+}
+
+model Goal {
+  id     String      @id @default(uuid())
+  name   String
+  userId String
+  user   UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DietaryPreference {
+  id           String      @id @default(uuid())
+  userId       String      @unique
+  user         UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type         String
+  restrictions String[]
+  dislikes     String[]
+}
+
+model Availability {
+  id            String      @id @default(uuid())
+  userId        String      @unique
+  user          UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  daysPerWeek   Int
+  minutesPerDay Int
+}
+
+model Workout {
+  id            String       @id @default(uuid())
+  workoutPlanId String?
+  workoutPlan   WorkoutPlan? @relation(fields: [workoutPlanId], references: [id], onDelete: Cascade)
+  name          String
+  description   String
+  duration      String
+  intensity     String
+  exercises     Exercise[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
+model Exercise {
+  id          String   @id @default(uuid())
+  workoutId   String
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  name        String
+  reps        String
+  bodyPart    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model UserWeightEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  weight    Float
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model ProvisionalWeightEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  weight    Float
+  month     Int
+  year      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([userId, month, year])
+}
+
+model CalorieLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  calories  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
