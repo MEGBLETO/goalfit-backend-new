@@ -12,7 +12,13 @@ export class WorkoutService {
       const prompt = buildMultiDayWorkoutPrompt(userData, days);
       const raw = await this.openaiService.chatWithJsonPrompt(prompt);
 
-      const parsed = fullWorkoutPlanSchema.safeParse(JSON.parse(raw));
+      const cleanJson = raw.replace(/```json|```/g, '').trim();
+      const formattedJson = `{ "days": ${cleanJson} }`;
+
+      console.log(formattedJson, 'Generated Workout Plan');
+
+      const parsed = fullWorkoutPlanSchema.safeParse(JSON.parse(formattedJson));
+
       if (!parsed.success) {
         console.error('Invalid AI response:', parsed.error.format());
         throw new Error('Invalid workout plan format');

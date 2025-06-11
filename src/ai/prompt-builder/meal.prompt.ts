@@ -34,8 +34,6 @@ ${user.healthConsiderations?.length ? `- Contraintes de santé : ${user.healthCo
 Génère un plan de repas personnalisé pour chaque jour parmi les dates suivantes :
 ${datesList}
 
-👉 Format de réponse JSON strict :
-
 [
   {
     "date": "YYYY-MM-DD",
@@ -44,18 +42,24 @@ ${datesList}
         "title": "Nom du plat",
         "ingredients": ["ingrédient 1", "ingrédient 2"],
         "instructions": ["étape 1", "étape 2"],
-        "calories": nombre
+        "calories": nombre,
+        "macros": {
+          "carbs": nombre,
+          "proteins": nombre,
+          "fats": nombre
+        }
       },
-      "lunch": { ... },
-      "dinner": { ... },
-      "snack": { ... }
+      "lunch": { ... même format ... },
+      "dinner": { ... même format ... },
+      "snack": { ... même format ... }
     }
   },
   ...
 ]
 
- Les instructions doivent être un **tableau de courtes phrases**.
- Réponds uniquement avec un tableau JSON, sans texte explicatif ni balisage.
- Les calories doivent être réalistes pour un objectif de ${user.goal}.
+Les instructions doivent être un **tableau de courtes phrases**.
+Chaque repas doit inclure un objet \`macros\` indiquant la quantité de **glucides (carbs), protéines (proteins) et lipides (fats) en grammes.
+Réponds uniquement avec un tableau JSON **valide**, sans texte explicatif ni balises.
+Les calories et macros doivent être cohérents et adaptés à l’objectif : ${user.goal}.
 `;
 };
