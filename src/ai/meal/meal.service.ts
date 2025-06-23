@@ -13,10 +13,7 @@ export class MealService {
       const raw = await this.openaiService.chatWithJsonPrompt(prompt);
 
       const cleanJson = raw.replace(/```json|```/g, '').trim();
-
       const formattedJson = `{ "days": ${cleanJson} }`;
-
-      console.log(formattedJson, 'hellloooo');
 
       const parsed = fullMealPlanSchema.safeParse(JSON.parse(formattedJson));
       if (!parsed.success) {
@@ -31,5 +28,109 @@ export class MealService {
         'Unable to generate meal plan at this time',
       );
     }
+  }
+
+  async generateDefaultMealPlan(days: string[] = []) {
+    try {
+      const defaultDays = days.length > 0 ? days : this.generateDefaultDates(7);
+
+      const defaultMealPlan = {
+        days: defaultDays.map((date) => ({
+          date,
+          meals: {
+            breakfast: {
+              title: 'Petit-déjeuner équilibré',
+              ingredients: ["Flocons d'avoine", 'Lait', 'Banane', 'Miel'],
+              instructions: [
+                "Cuire les flocons d'avoine avec le lait",
+                'Ajouter la banane coupée',
+                'Arroser de miel',
+              ],
+              calories: 350,
+              macros: {
+                carbs: 60,
+                proteins: 12,
+                fats: 8,
+              },
+            },
+            lunch: {
+              title: 'Salade composée',
+              ingredients: [
+                'Salade verte',
+                'Tomates',
+                'Concombre',
+                'Thon',
+                "Huile d'olive",
+              ],
+              instructions: [
+                'Laver et couper les légumes',
+                'Ajouter le thon',
+                "Assaisonner avec l'huile d'olive",
+              ],
+              calories: 400,
+              macros: {
+                carbs: 15,
+                proteins: 25,
+                fats: 20,
+              },
+            },
+            dinner: {
+              title: 'Poulet grillé avec légumes',
+              ingredients: [
+                'Blanc de poulet',
+                'Brocoli',
+                'Riz complet',
+                'Épices',
+              ],
+              instructions: [
+                'Griller le poulet avec les épices',
+                'Cuire le riz complet',
+                'Faire cuire les légumes à la vapeur',
+              ],
+              calories: 450,
+              macros: {
+                carbs: 45,
+                proteins: 35,
+                fats: 15,
+              },
+            },
+            snack: {
+              title: 'Fruits et noix',
+              ingredients: ['Pomme', 'Amandes', 'Noix'],
+              instructions: [
+                'Couper la pomme en tranches',
+                'Servir avec les noix',
+              ],
+              calories: 200,
+              macros: {
+                carbs: 25,
+                proteins: 6,
+                fats: 12,
+              },
+            },
+          },
+        })),
+      };
+
+      return defaultMealPlan;
+    } catch (error) {
+      console.error('Failed to generate default meal plan:', error);
+      throw new InternalServerErrorException(
+        'Unable to generate default meal plan at this time',
+      );
+    }
+  }
+
+  private generateDefaultDates(count: number): string[] {
+    const dates = [];
+    const today = new Date();
+
+    for (let i = 0; i < count; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+
+    return dates;
   }
 }

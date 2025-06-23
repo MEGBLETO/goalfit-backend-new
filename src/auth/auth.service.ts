@@ -47,8 +47,6 @@ export class AuthService {
       );
 
       const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
-      console.log(verificationToken, 'hello');
-      console.log(verificationUrl, 'hello');
 
       await this.mailService.sendVerificationEmail(
         user.email,
@@ -58,7 +56,13 @@ export class AuthService {
 
       return user;
     } catch (error) {
-      throw new InternalServerErrorException('Registration failed');
+      console.error('[AuthService:register] Error:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Registration failed due to an unexpected error.',
+      );
     }
   }
 
@@ -74,25 +78,37 @@ export class AuthService {
 
       return this.generateToken(user);
     } catch (error) {
-      throw new UnauthorizedException('Login failed');
+      console.error('[AuthService:login] Error:', error);
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Login failed due to an unexpected error.',
+      );
     }
   }
 
   async generateToken(user: any) {
-    return {
-      access_token: this.jwtService.sign({
-        sub: user.id,
-        email: user.email,
-        name: user.name,
-        surname: user.surname,
-      }),
-    };
+    try {
+      return {
+        access_token: this.jwtService.sign({
+          sub: user.id,
+          email: user.email,
+          name: user.name,
+          surname: user.surname,
+        }),
+      };
+    } catch (error) {
+      console.error('[AuthService:generateToken] Error:', error);
+      throw new InternalServerErrorException('Could not generate token.');
+    }
   }
 
   async VerifyToken(token: string) {
     try {
       return this.jwtService.verify(token);
     } catch (error) {
+      console.error('[AuthService:VerifyToken] Error:', error);
       throw new BadRequestException('Token invalid or expired');
     }
   }
@@ -100,7 +116,9 @@ export class AuthService {
   async verifyEmail(email: string) {
     try {
       const user = await this.prisma.user.findUnique({ where: { email } });
-      if (!user) throw new BadRequestException('User not found');
+      if (!user) {
+        throw new BadRequestException('User not found for email verification.');
+      }
 
       if (user.isEmailVerified) {
         return { message: 'Email already verified' };
@@ -110,48 +128,71 @@ export class AuthService {
         where: { email },
         data: { isEmailVerified: true },
       });
+      return { message: 'Email verified successfully.' };
     } catch (error) {
-      throw new InternalServerErrorException('Email verification failed');
+      console.error('[AuthService:verifyEmail] Error:', error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'Email verification failed due to an unexpected error.',
+      );
     }
   }
 
   async validateOrCreateGoogleUser(googleUser: any) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { googleId: googleUser.googleId },
-    });
+    try {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { googleId: googleUser.googleId },
+      });
 
-    if (existingUser) {
-      return existingUser;
+      if (existingUser) {
+        return existingUser;
+      }
+
+      const newUser = await this.prisma.user.create({
+        data: {
+          email: googleUser.email,
+          googleId: googleUser.googleId,
+          name: googleUser.name,
+          surname: googleUser.surname,
+          isEmailVerified: true,
+        },
+      });
+
+      return newUser;
+    } catch (error) {
+      console.error('[AuthService:validateOrCreateGoogleUser] Error:', error);
+      throw new InternalServerErrorException(
+        'Failed to validate or create Google user.',
+      );
     }
-
-    const newUser = await this.prisma.user.create({
-      data: {
-        email: googleUser.email,
-        googleId: googleUser.googleId,
-        name: googleUser.name,
-        surname: googleUser.surname,
-        isEmailVerified: true,
-      },
-    });
-
-    return newUser;
   }
 
   async requestPasswordReset(dto: RequestResetDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (!user) return; 
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
 
-    const token = this.jwtService.sign(
-      { email: user.email },
-      { expiresIn: '15m' },
-    );
+      if (!user) {
+        return { message: 'If your email exists, a reset link has been sent.' };
+      }
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`;
+      const token = this.jwtService.sign(
+        { email: user.email },
+        { expiresIn: '15m' },
+      );
 
-    await this.mailService.sendPasswordResetEmail(user.email, resetLink);
-    return { message: 'If your email exists, a reset link has been sent.' };
+      const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}&email=${user.email}`;
+
+      await this.mailService.sendPasswordResetEmail(user.email, resetLink);
+      return { message: 'If your email exists, a reset link has been sent.' };
+    } catch (error) {
+      console.error('[AuthService:requestPasswordReset] Error:', error);
+
+      return { message: 'If your email exists, a reset link has been sent.' };
+    }
   }
 
   async resetPassword(dto: ResetPasswordDto) {
@@ -161,7 +202,9 @@ export class AuthService {
         where: { email: payload.email },
       });
 
-      if (!user) throw new Error();
+      if (!user) {
+        throw new BadRequestException('Invalid token or user does not exist.');
+      }
 
       const hashedPassword = await bcrypt.hash(dto.newPassword, 10);
 
@@ -172,6 +215,7 @@ export class AuthService {
 
       return { message: 'Password has been reset successfully.' };
     } catch (err) {
+      console.error('[AuthService:resetPassword] Error:', err);
       throw new BadRequestException('Invalid or expired token.');
     }
   }
