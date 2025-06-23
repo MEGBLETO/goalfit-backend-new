@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -36,10 +35,11 @@ model UserProfile {
   id                   String             @id @default(uuid())
   userId               String             @unique
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  age                  Int?
+  dateOfBirth          DateTime?
   gender               String?
   height               Float?
   weight               Float?
+  objectiveWeight      Float?
   fitnessLevel         String?
   goals                Goal[]
   dietaryPreferences   DietaryPreference?
@@ -81,8 +81,8 @@ model Payment {
 
 model MealPlan {
   id         String   @id @default(uuid())
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   date       DateTime
   content    Json
   isDefault  Boolean  @default(false)
@@ -98,8 +98,8 @@ model MealPlan {
 
 model WorkoutPlan {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   date      DateTime
   isDefault Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -192,4 +192,19 @@ model CalorieLog {
   updatedAt DateTime @default(now())
 
   @@unique([userId, date])
+}
+
+model MealLog {
+  id        String   @id @default(uuid())
+  userId    String
+  date      DateTime
+  mealType  String   // e.g., 'breakfast', 'lunch', 'dinner', 'snack'
+  calories  Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date, mealType])
 }

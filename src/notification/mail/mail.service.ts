@@ -111,4 +111,24 @@ export class MailService {
       throw new InternalServerErrorException('Failed to send reset email');
     }
   }
+
+  async sendGenericEmail(
+    to: string,
+    subject: string,
+    html: string,
+    text?: string,
+  ) {
+    try {
+      await this.transporter.sendMail({
+        from: `"GoalFit" <${process.env.SMTP_USER}>`,
+        to,
+        subject,
+        html,
+        text,
+      });
+    } catch (error) {
+      console.error('Failed to send generic email:', error);
+      throw new InternalServerErrorException('Failed to send email');
+    }
+  }
 }

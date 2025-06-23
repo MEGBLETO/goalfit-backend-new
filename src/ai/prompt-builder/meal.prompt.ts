@@ -57,7 +57,7 @@ ${datesList}
   ...
 ]
 
-Les instructions doivent être un **tableau de courtes phrases**.
+Les instructions doivent être un tableau de courtes phrases.
 Chaque repas doit inclure un objet \`macros\` indiquant la quantité de **glucides (carbs), protéines (proteins) et lipides (fats) en grammes.
 Réponds uniquement avec un tableau JSON **valide**, sans texte explicatif ni balises.
 Les calories et macros doivent être cohérents et adaptés à l’objectif : ${user.goal}.
