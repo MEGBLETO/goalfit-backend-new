@@ -6,6 +6,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+COPY prisma ./prisma
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -17,14 +18,12 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy build output
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 COPY package*.json ./
-
-# Install only production deps
 RUN npm install --only=production
 
-#copy the generated Prisma client
+# Copy the generated Prisma client
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
 
