@@ -11,13 +11,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { 
-  ApiTags, 
-  ApiOperation, 
-  ApiResponse, 
-  ApiBody, 
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBody,
   ApiQuery,
-  ApiBearerAuth 
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -56,7 +56,10 @@ export class AuthController {
   @Get('profile')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile from JWT token' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   getProfile(@Request() req) {
     return req.user;
@@ -75,7 +78,7 @@ export class AuthController {
   async googleRedirect(@Request() req, @Res() res: Response) {
     const user = await this.authService.validateOrCreateGoogleUser(req.user);
     const token = (await this.authService.generateToken(user)).access_token;
-    
+
     // Redirect to frontend with token as URL parameter
     const frontendUrl = `${process.env.FRONTEND_URL}/google-callback?token=${token}`;
     res.redirect(frontendUrl);

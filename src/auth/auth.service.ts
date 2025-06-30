@@ -142,14 +142,31 @@ export class AuthService {
 
   async validateOrCreateGoogleUser(googleUser: any) {
     try {
-      const existingUser = await this.prisma.user.findUnique({
+      let existingUser = await this.prisma.user.findUnique({
         where: { googleId: googleUser.googleId },
       });
-
+  
       if (existingUser) {
         return existingUser;
       }
-
+  
+      existingUser = await this.prisma.user.findUnique({
+        where: { email: googleUser.email },
+      });
+  
+      if (existingUser) {
+        const updatedUser = await this.prisma.user.update({
+          where: { email: googleUser.email },
+          data: {
+            googleId: googleUser.googleId,
+            name: googleUser.name,
+            surname: googleUser.surname,
+            isEmailVerified: true,
+          },
+        });
+        return updatedUser;
+      }
+  
       const newUser = await this.prisma.user.create({
         data: {
           email: googleUser.email,
@@ -159,9 +176,14 @@ export class AuthService {
           isEmailVerified: true,
         },
       });
-
+  
       return newUser;
     } catch (error) {
+      if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+        return await this.prisma.user.findUnique({
+          where: { email: googleUser.email }
+        });
+      }
       console.error('[AuthService:validateOrCreateGoogleUser] Error:', error);
       throw new InternalServerErrorException(
         'Failed to validate or create Google user.',
@@ -169,6 +191,7 @@ export class AuthService {
     }
   }
 
+  
   async requestPasswordReset(dto: RequestResetDto) {
     try {
       const user = await this.prisma.user.findUnique({
