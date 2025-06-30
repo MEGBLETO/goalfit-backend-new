@@ -260,6 +260,8 @@ export class UserService {
 
   async delete(id: string) {
     try {
+      // Delete related weight entries first
+      await this.prisma.userWeightEntry.deleteMany({ where: { userId: id } });
       return await this.prisma.user.delete({ where: { id } });
     } catch (error) {
       console.error(`[UserService:delete] Error deleting user ${id}:`, error);
