@@ -25,3 +25,15 @@ jobs:
       run: |
         docker build -t nelzer95/goalfit-ai-new:latest .
         docker push nelzer95/goalfit-ai-new:latest
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd /goalfit-ai-new-deploy/
+          docker pull nelzer95/goalfit-ai-new:latest
+          docker-compose up -d
+          docker system prune -f
