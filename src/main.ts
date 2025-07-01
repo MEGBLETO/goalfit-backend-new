@@ -6,7 +6,11 @@ import * as bodyParser from 'body-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: [
+      'https://goalfit.fr',
+      'https://www.goalfit.fr',
+      'http://localhost:3000',
+    ],
     credentials: true,
   });
 
