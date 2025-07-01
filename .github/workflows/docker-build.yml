@@ -33,7 +33,7 @@ jobs:
         username: ${{ secrets.SERVER_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
-          cd /goalfit-ai-new-deploy/
+          cd /goalfit-ai-new-deploy
           docker pull nelzer95/goalfit-ai-new:latest
           docker-compose up -d
           docker system prune -f
