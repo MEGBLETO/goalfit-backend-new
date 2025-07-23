@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../common/prisma.service';
 import { MealService } from '../ai/meal/meal.service';
 import { SubscriptionService } from '../subscription/subscription.service';
+import { UnsplashService } from '../common/unsplash.service';
 
 @Injectable()
 export class MealPlanService {
@@ -14,6 +15,7 @@ export class MealPlanService {
     private readonly prisma: PrismaService,
     private readonly mealService: MealService,
     private readonly subscriptionService: SubscriptionService,
+    private readonly unsplashService: UnsplashService,
   ) {}
 
   async getMealPlans(userId: string) {
@@ -90,7 +92,6 @@ export class MealPlanService {
         }));
       }
 
-      // If no default plans exist, generate them using AI
       logger.log(
         '[MealPlanService] No existing default plans found. Generating new ones.',
       );
@@ -108,6 +109,27 @@ export class MealPlanService {
 
       const storedPlans = [];
       for (const mealPlan of aiGeneratedPlans) {
+        if (mealPlan.breakfast) {
+          mealPlan.breakfast.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.breakfast.name,
+          );
+        }
+        if (mealPlan.lunch) {
+          mealPlan.lunch.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.lunch.name,
+          );
+        }
+        if (mealPlan.dinner) {
+          mealPlan.dinner.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.dinner.name,
+          );
+        }
+        if (mealPlan.snack) {
+          mealPlan.snack.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.snack.name,
+          );
+        }
+
         const storedPlan = await this.prisma.mealPlan.create({
           data: {
             date: new Date(mealPlan.day),
@@ -218,7 +240,6 @@ export class MealPlanService {
   async generateAndStoreMealPlans(mealPlans: any[], userId: string) {
     const logger = new Logger(MealPlanService.name);
     try {
-      // Check if user has active subscription
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
@@ -248,6 +269,27 @@ export class MealPlanService {
         const planDate = new Date(mealPlan.day);
         planDate.setUTCHours(0, 0, 0, 0);
 
+        if (mealPlan.breakfast) {
+          mealPlan.breakfast.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.breakfast.name,
+          );
+        }
+        if (mealPlan.lunch) {
+          mealPlan.lunch.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.lunch.name,
+          );
+        }
+        if (mealPlan.dinner) {
+          mealPlan.dinner.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.dinner.name,
+          );
+        }
+        if (mealPlan.snack) {
+          mealPlan.snack.imageUrl = await this.unsplashService.getImageUrl(
+            mealPlan.snack.name,
+          );
+        }
+
         const storedPlan = await this.prisma.mealPlan.upsert({
           where: {
             userId_date: {
@@ -275,7 +317,7 @@ export class MealPlanService {
           },
         });
         logger.log(
-          `[MealPlanService] Upserted meal plan for user ${userId} on date ${planDate.toISOString()}`,
+          `[MealPlanService] Upserted meal plan for user ${userId} on date ${planDate.toISOString()} with per-meal images`,
         );
         storedPlans.push(storedPlan);
       }
@@ -311,7 +353,6 @@ export class MealPlanService {
         throw new NotFoundException('User not found');
       }
 
-      // Create detailed user data for custom plans
       const customUserData = {
         gender: user.profile?.gender || 'homme',
         age: this.calculateAge(user.profile?.dateOfBirth) || 30,
@@ -398,14 +439,12 @@ export class MealPlanService {
   async triggerUserMealPlanGeneration(userId: string) {
     const logger = new Logger(MealPlanService.name);
     try {
-      // First, generate the custom meal plans using the user's profile
       const generatedPlans = await this.generateCustomMealPlansForUser(userId);
 
       if (!generatedPlans || generatedPlans.length === 0) {
         throw new Error('AI generation failed to return plans.');
       }
 
-      // Then, store these newly generated plans in the database
       return await this.generateAndStoreMealPlans(generatedPlans, userId);
     } catch (error) {
       logger.error(
@@ -549,7 +588,6 @@ export class MealPlanService {
     return totalFat;
   }
 
-  // Helper to get existing meal plan dates for a user or default
   private async getExistingMealPlanDates(
     userId: string | null,
     dates: string[],
@@ -890,4 +928,3 @@ export class MealPlanService {
     });
   }
 }
- 
