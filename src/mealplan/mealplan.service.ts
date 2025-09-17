@@ -58,6 +58,35 @@ export class MealPlanService {
             ...(plan.content as any),
           }));
         }
+
+        // For subscribed users without custom plans, generate them automatically
+        logger.log(
+          `[MealPlanService] No user-specific meal plans found for subscribed user ${userId}. Generating custom plans.`,
+        );
+        try {
+          const generatedPlans = await this.generateCustomMealPlansForUser(userId);
+          if (generatedPlans && generatedPlans.length > 0) {
+            await this.generateAndStoreMealPlans(generatedPlans, userId);
+            logger.log(
+              `[MealPlanService] Successfully generated and stored custom meal plans for user ${userId}.`,
+            );
+            
+            // Return the generated plans
+            return generatedPlans.map((plan) => ({
+              day: plan.day,
+              ...plan,
+            }));
+          }
+        } catch (generationError) {
+          logger.error(
+            `[MealPlanService] Failed to generate custom meal plans for user ${userId}:`,
+            generationError,
+          );
+          // Fall back to default plans if generation fails
+          logger.log(
+            `[MealPlanService] Falling back to default plans for user ${userId} due to generation failure.`,
+          );
+        }
       }
 
       logger.log(
